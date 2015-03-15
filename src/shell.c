@@ -26,6 +26,8 @@ void mmtest_command(int, char **);
 void test_command(int, char **);
 void _command(int, char **);
 
+int stoi(char *); //make sting of number into integer form
+
 #define MKCL(n, d) {.name=#n, .fptr=n ## _command, .desc=d}
 
 cmdlist cl[]={
@@ -161,6 +163,36 @@ void help_command(int n,char *argv[]){
 }
 
 void test_command(int n, char *argv[]) {
+    /* 
+    	compute Fibonacci number with char 'f' and int parameter
+    	e.g. "test f 10" is to compute the 10th number of Fibonacci number.
+    */ 
+    if (n>=3)
+    {
+    	if (*argv[1]=='f')
+    	{
+    		//fit the format and then operate the funciton
+    		if (*argv[2]!=0)
+			{
+				int i;
+	    		int count = stoi(argv[2]); 
+	    		int result = 1;
+	    		int prev = 0;
+	    		int temp;
+	    		for (i = 1; i < count; ++i)
+	    		{
+	    			temp = result;
+	    			result = result + prev;
+	    			prev = temp ;
+	    		}
+	    		//print the result to the screen.
+	    		fio_printf(1,"\r\nFibonacci number at %d is %d",count,result) ;
+			}	
+    	}
+    }
+
+
+
     int handle;
     int error;
 
@@ -200,4 +232,16 @@ cmdfunc *do_command(const char *cmd){
 			return cl[i].fptr;
 	}
 	return NULL;	
+}
+
+int stoi(char *str)
+{
+	int i;
+	int result = 0;
+	int count = strlen(str);
+	for (i = 0; i < count; ++i)
+	{
+		result = result*10+(str[i]-'0');
+	}
+	return result;
 }
