@@ -9,6 +9,8 @@
 #include "task.h"
 #include "host.h"
 
+#include <math.h>
+
 typedef struct {
 	const char *name;
 	cmdfunc *fptr;
@@ -27,6 +29,7 @@ void test_command(int, char **);
 void _command(int, char **);
 
 int stoi(char *); //make sting of number into integer form
+float InvSqrt(int);	//compute the sqrt of a number.
 
 #define MKCL(n, d) {.name=#n, .fptr=n ## _command, .desc=d}
 
@@ -163,12 +166,13 @@ void help_command(int n,char *argv[]){
 }
 
 void test_command(int n, char *argv[]) {
-    /* 
-    	compute Fibonacci number with char 'f' and int parameter
-    	e.g. "test f 10" is to compute the 10th number of Fibonacci number.
-    */ 
+
     if (n>=3)
     {
+    	/* 
+	    	compute Fibonacci number with char 'f' and int parameter
+	    	e.g. "test f 10" is to compute the 10th number of Fibonacci number.
+    	*/ 
     	if (*argv[1]=='f')
     	{
     		//fit the format and then operate the funciton
@@ -189,8 +193,55 @@ void test_command(int n, char *argv[]) {
 	    		fio_printf(1,"\r\nFibonacci number at %d is %d",count,result) ;
 			}	
     	}
-    }
 
+    	/*
+    		judge whether the input number is a prime with char 'p' and int parameter.
+    		e.g. after type "test p 3", the result will be shown up in the terminal.
+    	*/ 
+    	if (*argv[1]=='p')
+    	{
+    		if (*argv[2]!=0)
+    		{
+    			int is_prime = 1; //1->is a prime ; 0-> not a prime
+    			int number = stoi(argv[2]);
+
+    			if ((number << 31)==0) //check whether it is even number
+    			{
+    				is_prime = 0;
+    				if (number==2)	// 2 is a prime
+    				{
+    					is_prime = 1;
+    				}
+    			}
+    			else
+    			{
+    				int i;
+    				int count = (int)InvSqrt(number);	// from 2 to sqrt(n)
+    				float result;
+    				for (i = 2; i <= count; ++i)
+    				{
+    					result = number%i; //if the remainder is 0, it is not prime
+    					if (result==0)
+    					{
+    						is_prime = 0;
+    						break;			//if it is not a prime, the check is over.
+    					}
+    				}
+    			}
+
+    			//print the result to the screen
+    			if (is_prime)
+    			{
+    				fio_printf(1,"\r\nNumber %d is a prime.",number);
+    			}
+    			else
+    			{
+    				fio_printf(1,"\r\nNumber %d is not a prime.",number);    				
+    			}
+    		}
+    	}
+
+    }
 
 
     int handle;
@@ -244,4 +295,17 @@ int stoi(char *str)
 		result = result*10+(str[i]-'0');
 	}
 	return result;
+}
+
+float InvSqrt(int x_in)
+{
+	float x = (float)x_in;
+    float xhalf = 0.5f*x;
+    int i = *(int*)&x; // get bits for floating VALUE 
+    i = 0x5f375a86- (i>>1); // gives initial guess y0
+    x = *(float*)&i; // convert bits BACK to float
+    x = x*(1.5f-xhalf*x*x); // Newton step, repeating increases accuracy
+    x = x*(1.5f-xhalf*x*x); // Newton step, repeating increases accuracy
+    x = x*(1.5f-xhalf*x*x); // Newton step, repeating increases accuracy
+    return 1/x;
 }
