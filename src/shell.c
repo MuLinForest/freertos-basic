@@ -28,6 +28,9 @@ void mmtest_command(int, char **);
 void test_command(int, char **);
 void _command(int, char **);
 
+void new_command(int, char **);
+void do_sth(void *);
+
 int stoi(char *); //make sting of number into integer form
 float InvSqrt(int);	//compute the sqrt of a number.
 
@@ -42,6 +45,7 @@ cmdlist cl[]={
 	MKCL(mmtest, "heap memory allocation test"),
 	MKCL(help, "help"),
 	MKCL(test, "test new function"),
+	MKCL(new, "Create new task"),
 	MKCL(, ""),
 };
 
@@ -308,4 +312,40 @@ float InvSqrt(int x_in)
     x = x*(1.5f-xhalf*x*x); // Newton step, repeating increases accuracy
     x = x*(1.5f-xhalf*x*x); // Newton step, repeating increases accuracy
     return 1/x;
+}
+
+void new_command(int n, char *argv[])
+{
+	fio_printf(1,"\r\n");
+	if (n>=2)
+	{
+		int count = stoi(argv[1]);
+		int i;
+		int error_code; //detect whether the task created by the return code
+		for (i = 0; i < count; ++i)
+		{
+			error_code = xTaskCreate(do_sth,	//task ptr
+									(signed portCHAR *)"do_sth",	//task name
+									512,	//stack depth
+				 					NULL,	//pass the parameter to the funciton
+				 					tskIDLE_PRIORITY + 1,	//priority of the task
+				 					NULL);
+			if (error_code == 1)
+			{
+				fio_printf(1,"A new task has been created. \r\n");
+			}
+			else
+			{
+				fio_printf(1,"A new task fail to be created.\r\n");
+			}
+		}
+	}
+}
+
+void do_sth(void *pvParameters)
+{
+	while(1)
+	{
+		//do nothing.
+	}
 }
