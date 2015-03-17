@@ -30,6 +30,7 @@ void _command(int, char **);
 
 void new_command(int, char **);
 void do_sth(void *);
+void ps_record(void *);
 
 int stoi(char *); //make sting of number into integer form
 float InvSqrt(int);	//compute the sqrt of a number.
@@ -247,7 +248,7 @@ void test_command(int n, char *argv[]) {
 
     }
 
-
+/*
     int handle;
     int error;
 
@@ -270,7 +271,7 @@ void test_command(int n, char *argv[]) {
         return;
     }
 
-    host_action(SYS_CLOSE, handle);
+    host_action(SYS_CLOSE, handle);*/
 }
 
 void _command(int n, char *argv[]){
@@ -340,6 +341,13 @@ void new_command(int n, char *argv[])
 			}
 		}
 	}
+	else
+	{
+		if (xTaskCreate(ps_record,	(signed portCHAR *)"ps_rec",	512, NULL, tskIDLE_PRIORITY + 1, NULL) == 1)
+		{
+			fio_printf(1,"Process-State Rocord Task created.\r\n");
+		}
+	}
 }
 
 void do_sth(void *pvParameters)
@@ -347,5 +355,52 @@ void do_sth(void *pvParameters)
 	while(1)
 	{
 		//do nothing.
+	}
+}
+
+void ps_record(void *pvParameters)
+{
+
+	int timer = 0;
+	while(1)
+	{
+		if (timer==0)
+		{
+			
+			signed char buf[1024];
+			vTaskList(buf);
+
+			int buf_len = 0;
+			while(*(buf+buf_len)!='\0')
+			{
+				buf_len ++;	//to find the end mark of the char matrix.
+			}
+
+			int handle;
+		    int error;
+		    
+		    handle = host_action(SYS_SYSTEM, "mkdir -p output");
+		    handle = host_action(SYS_SYSTEM, "touch output/sysinfo");
+
+		    handle = host_action(SYS_OPEN, "output/sysinfo", 8);
+		    if(handle == -1) {
+		        fio_printf(1, "Open file error!\n\r");
+		        return;
+		    }
+
+		    char *buffer1 = "\nName          State   Priority  Stack  Num\n";
+		    error = host_action(SYS_WRITE, handle, (void *)buffer1, strlen(buffer1));
+		    if(error != 0) {
+		        fio_printf(1, "Write file error! Remain %d bytes didn't write in the file.\n\r", error);
+		        host_action(SYS_CLOSE, handle);
+		        return;
+		    }
+		    char *buffer2 = "*******************************************";
+		    host_action(SYS_WRITE, handle, (void *)buffer2, strlen(buffer2));
+		    host_action(SYS_WRITE, handle, (void *)buf, buf_len);
+
+		    host_action(SYS_CLOSE, handle);
+		}
+		timer = (timer+1)%300000000;
 	}
 }
