@@ -7,6 +7,7 @@
 #include "romfs.h"
 #include "osdebug.h"
 #include "hash-djb2.h"
+#include "clib.h"
 
 struct romfs_fds_t {
     const uint8_t * file;
@@ -104,7 +105,52 @@ static int romfs_open(void * opaque, const char * path, int flags, int mode) {
     return r;
 }
 
+/*  
+    this function is to look up all path hash, 
+    and as well as it is the same, then print the file name.
+*/
+static int romfs_open_dir(void * opaque, const char * path) {
+    uint32_t h = hash_djb2((const uint8_t *) path, -1);
+    /*
+    if (path[strlen(path)]!='/')
+    {
+        h = ((h << 5) + h) ^ '/';
+    }
+    */
+    const uint8_t * romfs = (const uint8_t *) opaque;
+    const uint8_t * meta;
+    const uint8_t * file;
+    int r = -1;
+    int count;
+    char buf[128];
+    int result = 0 ;
+
+    for (meta = romfs; get_unaligned(meta) && get_unaligned(meta + 4); meta += get_unaligned(meta + 4) + 12) {        
+        if (get_unaligned(meta+8) == h) {
+            file = meta+12;
+            r = fio_open(romfs_read, NULL, romfs_seek, NULL, NULL);
+            if (r > 0) {
+                const uint8_t *filestart = file;
+                while(*filestart) ++filestart;
+                uint32_t size = filestart - file;
+                romfs_fds[r].file = file;
+                romfs_fds[r].cursor = 0;
+                romfs_fds[r].size = size;
+                fio_set_opaque(r, romfs_fds + r);
+                while((count=fio_read(r, buf, sizeof(buf)))>0){
+                    fio_write(1, buf, count);
+                }
+            }
+            fio_close(r);
+            r = -1;
+            fio_printf(1,"\t");
+            result++;
+        }
+    }
+    return result;
+}
+
 void register_romfs(const char * mountpoint, const uint8_t * romfs) {
 //    DBGOUT("Registering romfs `%s' @ %p\r\n", mountpoint, romfs);
-    register_fs(mountpoint, romfs_open, NULL, (void *) romfs);
+    register_fs(mountpoint, romfs_open, romfs_open_dir, (void *) romfs);
 }

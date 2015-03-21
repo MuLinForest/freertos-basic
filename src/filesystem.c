@@ -5,7 +5,7 @@
 #include <stdint.h>
 #include <string.h>
 #include <hash-djb2.h>
-
+#include "clib.h"
 #define MAX_FS 16
 
 struct fs_t {
@@ -64,12 +64,14 @@ int fs_open(const char * path, int flags, int mode) {
 }
 
 static int root_opendir(){
+    
     return OPENDIR_NOTFOUNDFS;        
 }
 
 int fs_opendir(const char * path){
     const char * slash;
     uint32_t hash;
+    //char buf[128];
     
     if ( path[0] == '\0' || (path[0] == '/' && path[1] == '\0') ){
         return root_opendir();
@@ -83,7 +85,7 @@ int fs_opendir(const char * path){
         slash = path + strlen(path);
 
     hash = hash_djb2((const uint8_t *) path, slash - path);
-    
+
     if(*(slash) == '\0'){
         path = "";
     }else{
