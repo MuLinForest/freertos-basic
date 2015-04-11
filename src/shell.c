@@ -72,7 +72,7 @@ int parse_command(char *str, char *argv[]){
 }
 
 void ls_command(int n, char *argv[]){
-    fio_printf(1,"\r\n"); 
+    fio_printf(1,"\r\n");
     int dir;
     if(n == 1){
         dir = fs_opendir("");
@@ -101,7 +101,7 @@ int filedump(const char *filename){
 	while((count=fio_read(fd, buf, sizeof(buf)))>0){
 		fio_write(1, buf, count);
     }
-	
+
     fio_printf(1, "\r");
 
 	fio_close(fd);
@@ -113,7 +113,7 @@ void ps_command(int n, char *argv[]){
 	vTaskList(buf);
         fio_printf(1, "\n\rName          State   Priority  Stack  Num\n\r");
         fio_printf(1, "*******************************************\n\r");
-	fio_printf(1, "%s\r\n", buf + 2);	
+	fio_printf(1, "%s\r\n", buf + 2);
 }
 
 void cat_command(int n, char *argv[]){
@@ -157,7 +157,7 @@ void host_command(int n, char *argv[]){
         command[len - 1] = '\0';
         rnt=host_action(SYS_SYSTEM, command);
         fio_printf(1, "\r\nfinish with exit code %d.\r\n", rnt);
-    } 
+    }
     else {
         fio_printf(2, "\r\nUsage: host 'command'\r\n");
     }
@@ -175,17 +175,17 @@ void test_command(int n, char *argv[]) {
 
     if (n>=3)
     {
-    	/* 
+    	/*
 	    	compute Fibonacci number with char 'f' and int parameter
 	    	e.g. "test f 10" is to compute the 10th number of Fibonacci number.
-    	*/ 
+    	*/
     	if (*argv[1]=='f')
     	{
     		//fit the format and then operate the funciton
     		if (*argv[2]!=0)
 			{
 				int i;
-	    		int count = stoi(argv[2]); 
+	    		int count = stoi(argv[2]);
 	    		int result = 1;
 	    		int prev = 0;
 	    		int temp;
@@ -197,13 +197,13 @@ void test_command(int n, char *argv[]) {
 	    		}
 	    		//print the result to the screen.
 	    		fio_printf(1,"\r\nFibonacci number at %d is %d",count,result) ;
-			}	
+			}
     	}
 
     	/*
     		judge whether the input number is a prime with char 'p' and int parameter.
     		e.g. after type "test p 3", the result will be shown up in the terminal.
-    	*/ 
+    	*/
     	if (*argv[1]=='p')
     	{
     		if (*argv[2]!=0)
@@ -242,7 +242,7 @@ void test_command(int n, char *argv[]) {
     			}
     			else
     			{
-    				fio_printf(1,"\r\nNumber %d is not a prime.",number);    				
+    				fio_printf(1,"\r\nNumber %d is not a prime.",number);
     			}
     		}
     	}
@@ -254,7 +254,7 @@ void test_command(int n, char *argv[]) {
     int error;
 
     fio_printf(1, "\r\n");
-    
+
     handle = host_action(SYS_SYSTEM, "mkdir -p output");
     handle = host_action(SYS_SYSTEM, "touch output/syslog");
 
@@ -288,7 +288,7 @@ cmdfunc *do_command(const char *cmd){
 		if(strcmp(cl[i].name, cmd)==0)
 			return cl[i].fptr;
 	}
-	return NULL;	
+	return NULL;
 }
 
 int stoi(char *str)
@@ -307,7 +307,7 @@ float InvSqrt(int x_in)
 {
 	float x = (float)x_in;
     float xhalf = 0.5f*x;
-    int i = *(int*)&x; // get bits for floating VALUE 
+    int i = *(int*)&x; // get bits for floating VALUE
     i = 0x5f375a86- (i>>1); // gives initial guess y0
     x = *(float*)&i; // convert bits BACK to float
     x = x*(1.5f-xhalf*x*x); // Newton step, repeating increases accuracy
@@ -361,47 +361,47 @@ void do_sth(void *pvParameters)
 
 void ps_record(void *pvParameters)
 {
-
-	int timer = 0;
 	while(1)
 	{
-		if (timer==0)
+		signed char buf[1024];
+		vTaskList(buf);
+
+		int buf_len = 0;
+		while(*(buf+buf_len)!='\0')
 		{
-			
-			signed char buf[1024];
-			vTaskList(buf);
-
-			int buf_len = 0;
-			while(*(buf+buf_len)!='\0')
-			{
-				buf_len ++;	//to find the end mark of the char matrix.
-			}
-
-			int handle;
-		    int error;
-		    
-		    handle = host_action(SYS_SYSTEM, "mkdir -p output");
-		    handle = host_action(SYS_SYSTEM, "touch output/sysinfo");
-
-		    handle = host_action(SYS_OPEN, "output/sysinfo", 8);
-		    if(handle == -1) {
-		        fio_printf(1, "Open file error!\n\r");
-		        return;
-		    }
-
-		    char *buffer1 = "\nName          State   Priority  Stack  Num\n";
-		    error = host_action(SYS_WRITE, handle, (void *)buffer1, strlen(buffer1));
-		    if(error != 0) {
-		        fio_printf(1, "Write file error! Remain %d bytes didn't write in the file.\n\r", error);
-		        host_action(SYS_CLOSE, handle);
-		        return;
-		    }
-		    char *buffer2 = "*******************************************";
-		    host_action(SYS_WRITE, handle, (void *)buffer2, strlen(buffer2));
-		    host_action(SYS_WRITE, handle, (void *)buf, buf_len);
-
-		    host_action(SYS_CLOSE, handle);
+			buf_len ++;	//to find the end mark of the char matrix.
 		}
-		timer = (timer+1)%300000000;
+
+		int handle;
+	    int error;
+
+	    handle = host_action(SYS_SYSTEM, "mkdir -p output");
+	    handle = host_action(SYS_SYSTEM, "touch output/sysinfo");
+
+	    handle = host_action(SYS_OPEN, "output/sysinfo", 8);
+	    if(handle == -1) {
+	        fio_printf(1, "Open file error!\n\r");
+	        return;
+	    }
+
+	    char *buffer1 = "\nName          State   Priority  Stack  Num\n";
+	    error = host_action(SYS_WRITE, handle, (void *)buffer1, strlen(buffer1));
+	    if(error != 0) {
+	        fio_printf(1, "Write file error! Remain %d bytes didn't write in the file.\n\r", error);
+	        host_action(SYS_CLOSE, handle);
+	        return;
+	    }
+	    char *buffer2 = "*******************************************";
+	    host_action(SYS_WRITE, handle, (void *)buffer2, strlen(buffer2));
+	    host_action(SYS_WRITE, handle, (void *)buf, buf_len);
+
+	    host_action(SYS_CLOSE, handle);
+
+	    /*
+	    	delay 1 sec.
+	    	xTaskGetTickCount() will add 1 every 10ms,
+	    	so it takes 1 sec after add 100.
+	    */
+		while(xTaskGetTickCount()%100);
 	}
 }
